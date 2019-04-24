@@ -9,6 +9,7 @@ class ArcDatabase {
     this.server = server({ apiUrl: 'http://localhost:8081', port: 9000 });
     this.adapter = rethinkdb(this.config);
     this.adapter.connect();
+    this.registerCommands();
   }
 
   registerCommands() {

@@ -1,6 +1,6 @@
 const rethinkdb = require('../adapters/rethinkdb');
 const uuid = require('uuid');
-const server = require('@arc/server');
+const { server } = require('@arc/relay');
 const { DatabaseReference, DocumentReference } = require('@arc/sdk/database');
 
 class ArcDatabase {

@@ -32,10 +32,7 @@ class RethinkDbAdapater {
         .table(ref.name)
         .insert(data, { returnChanges: true })
         .run(this.connection)
-        .then((result) => {
-          const { data, id } = result.changes[0].new_val;
-          return { id: id, ...data };
-        })
+        .then((result) => result.changes[0].new_val)
     );
     // TODO: What if the result has a problem? Revisit error handling here later.
   }

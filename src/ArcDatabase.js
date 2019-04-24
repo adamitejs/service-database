@@ -27,7 +27,7 @@ class ArcDatabase {
       try {
         const ref = DatabaseReference.fromPath(args.ref);
         const result = await this.adapter.createDocument(ref, args.data);
-        callback({ ref: args.ref, error: false, result });
+        callback({ ref: args.ref, error: false, data: result });
       } catch (err) {
         callback({ ref: args.ref, error: err });
       }

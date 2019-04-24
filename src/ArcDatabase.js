@@ -27,7 +27,27 @@ class ArcDatabase {
       try {
         const ref = DatabaseReference.fromPath(args.ref);
         const result = await this.adapter.createDocument(ref, args.data);
-        callback({ ref: args.ref, error: false, result });
+        callback({ ref: args.ref, error: false, data: result });
+      } catch (err) {
+        callback({ ref: args.ref, error: err });
+      }
+    });
+
+    this.server.command('database.updateDocument', async (client, args, callback) => {
+      try {
+        const ref = DatabaseReference.fromPath(args.ref);
+        const result = await this.adapter.updateDocument(ref, args.data);
+        callback({ ref: args.ref, error: false, data: result });
+      } catch (err) {
+        callback({ ref: args.ref, error: err.message });
+      }
+    });
+
+    this.server.command('database.deleteDocument', async (client, args, callback) => {
+      try {
+        const ref = DatabaseReference.fromPath(args.ref);
+        await this.adapter.deleteDocument(ref);
+        callback({ ref: args.ref, error: false });
       } catch (err) {
         callback({ ref: args.ref, error: err });
       }

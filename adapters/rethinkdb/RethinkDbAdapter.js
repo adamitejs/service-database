@@ -39,6 +39,14 @@ class RethinkDbAdapater {
     );
     // TODO: What if the result has a problem? Revisit error handling here later.
   }
+
+  deleteDocument(ref) {
+    return r.db(ref.collection.database.name)
+            .table(ref.collection.name)
+            .get(ref.name)
+            .delete()
+            .run(this.connection);
+  }
 }
 
 module.exports = RethinkDbAdapater;

@@ -6,7 +6,7 @@ const { DatabaseReference, DocumentReference } = require('@arc/sdk/database');
 class ArcDatabase {
   constructor(config) {
     this.config = config;
-    this.server = server({ apiUrl: 'http://localhost:8081', port: 9000 });
+    this.server = server({ apiUrl: 'http://localhost:9000', port: 9001 });
     this.adapter = rethinkdb(this.config);
     this.adapter.connect();
     this.registerCommands();

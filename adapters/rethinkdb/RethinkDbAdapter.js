@@ -30,7 +30,7 @@ class RethinkDbAdapater {
       r
         .db(ref.database.name)
         .table(ref.name)
-        .insert({ data }, { returnChanges: true })
+        .insert(data, { returnChanges: true })
         .run(this.connection)
         .then((result) => {
           const { data, id } = result.changes[0].new_val;
@@ -39,13 +39,27 @@ class RethinkDbAdapater {
     );
     // TODO: What if the result has a problem? Revisit error handling here later.
   }
+  
+  updateDocument(ref, data) {
+    return (
+      r
+        .db(ref.collection.database.name)
+        .table(ref.collection.name)
+        .get(ref.name)
+        .update(data)
+        .run(this.connection)
+    );
+  }
 
   deleteDocument(ref) {
-    return r.db(ref.collection.database.name)
-            .table(ref.collection.name)
-            .get(ref.name)
-            .delete()
-            .run(this.connection);
+    return (
+      r
+        .db(ref.collection.database.name)
+        .table(ref.collection.name)
+        .get(ref.name)
+        .delete()
+        .run(this.connection)
+    );
   }
 }
 

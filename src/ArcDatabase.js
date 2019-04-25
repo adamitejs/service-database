@@ -1,7 +1,6 @@
 const rethinkdb = require('../adapters/rethinkdb');
-const uuid = require('uuid');
 const { server } = require('@arc/relay');
-const { DatabaseReference, DocumentReference } = require('@arc/sdk/database');
+const DatabaseDeserializer = require('@arc/sdk/core/serialization/DatabaseDeserializer');
 
 class ArcDatabase {
   constructor(config) {
@@ -15,42 +14,25 @@ class ArcDatabase {
   registerCommands() {
     this.server.command('database.readDocument', async (client, args, callback) => {
       try {
-        const ref = DatabaseReference.fromPath(args.ref);
+        const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
         const data = await this.adapter.readDocument(ref);
-        callback({ ref: args.ref, error: false, data });
+        callback({ error: false, snapshot: { ref, data } });
       } catch (err) {
-        callback({ ref: args.ref, error: err });
+        console.error(err);
+        callback({ error: err.message, snapshot: { ref } });
       }
     });
 
     this.server.command('database.createDocument', async (client, args, callback) => {
-      try {
-        const ref = DatabaseReference.fromPath(args.ref);
-        const result = await this.adapter.createDocument(ref, args.data);
-        callback({ ref: args.ref, error: false, data: result });
-      } catch (err) {
-        callback({ ref: args.ref, error: err });
-      }
+      
     });
 
     this.server.command('database.updateDocument', async (client, args, callback) => {
-      try {
-        const ref = DatabaseReference.fromPath(args.ref);
-        const result = await this.adapter.updateDocument(ref, args.data);
-        callback({ ref: args.ref, error: false, data: result });
-      } catch (err) {
-        callback({ ref: args.ref, error: err.message });
-      }
+      
     });
 
     this.server.command('database.deleteDocument', async (client, args, callback) => {
-      try {
-        const ref = DatabaseReference.fromPath(args.ref);
-        await this.adapter.deleteDocument(ref);
-        callback({ ref: args.ref, error: false });
-      } catch (err) {
-        callback({ ref: args.ref, error: err });
-      }
+      
     });
   }
 

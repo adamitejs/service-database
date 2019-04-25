@@ -20,7 +20,7 @@ class RethinkDbAdapater {
       r
         .db(ref.collection.database.name)
         .table(ref.collection.name)
-        .get(ref.name)
+        .get(ref.id)
         .run(this.connection)
     );
   }

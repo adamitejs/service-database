@@ -75,6 +75,21 @@ class RethinkDbAdapater {
       });
     });
   }
+
+  subscribeCollection(ref, callback) {
+    const changes = (
+      r
+        .db(ref.database.name)
+        .table(ref.name)
+        .changes({ includeInitial: true })
+    );
+
+    changes.run(this.connection, (err, cursor) => {
+      cursor.each((err, row) => {
+        callback(err, row.old_val, row.new_val);
+      });
+    });
+  }
 }
 
 module.exports = RethinkDbAdapater;

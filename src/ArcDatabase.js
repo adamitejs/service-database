@@ -88,6 +88,33 @@ class ArcDatabase {
         callback({ error: err.message, subscription: { ref } });
       }
     });
+
+    this.server.command('database.subscribeCollection', async (client, args, callback) => {
+      const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
+      
+      try {
+        const id = uuid.v4();
+        
+        await this.adapter.subscribeCollection(ref, (err, oldData, newData) => {
+          if (err) {
+            console.error(err);
+            return this.client.socket.emit(id, { error: err.message, subscription: { ref, id } });
+          }
+
+          client.socket.emit(id, {
+            error: false,
+            subscription: { ref, id },
+            newSnapshot: newData && { ref: ref.doc(newData.id), data: newData },
+            oldSnapshot: oldData && { ref: ref.doc(oldData.id), data: oldData },
+          });
+        });
+
+        callback({ error: false, subscription: { ref, id } });
+      } catch (err) {
+        console.error(err);
+        callback({ error: err.message, subscription: { ref } });
+      }
+    });
   }
 
   start() {

@@ -42,9 +42,10 @@ class RethinkDbAdapater {
       r
         .db(ref.collection.database.name)
         .table(ref.collection.name)
-        .get(ref.name)
-        .update(data)
+        .get(ref.id)
+        .update(data, { returnChanges: true })
         .run(this.connection)
+        .then((result) => result.changes[0].new_val)
     );
   }
 
@@ -53,7 +54,7 @@ class RethinkDbAdapater {
       r
         .db(ref.collection.database.name)
         .table(ref.collection.name)
-        .get(ref.name)
+        .get(ref.id)
         .delete()
         .run(this.connection)
     );

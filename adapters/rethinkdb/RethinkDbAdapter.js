@@ -59,6 +59,22 @@ class RethinkDbAdapater {
         .run(this.connection)
     );
   }
+
+  subscribeDocument(ref, callback) {
+    const changes = (
+      r
+        .db(ref.collection.database.name)
+        .table(ref.collection.name)
+        .get(ref.id)
+        .changes({ includeInitial: true })
+    );
+
+    changes.run(this.connection, (err, cursor) => {
+      cursor.each((err, row) => {
+        callback(err, row.old_val, row.new_val);
+      });
+    });
+  }
 }
 
 module.exports = RethinkDbAdapater;

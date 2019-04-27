@@ -25,6 +25,24 @@ class RethinkDbAdapater {
     );
   }
 
+  readCollection(ref) {
+    let query = (
+      r
+        .db(ref.database.name)
+        .table(ref.name)
+    );
+
+    if (ref._limit) {
+      query = query.limit(ref._limit);
+    }
+
+    return (
+      query
+        .run(this.connection)
+        .then(r => r.toArray())
+    );
+  }
+
   createDocument(ref, data) {
     return (
       r

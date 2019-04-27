@@ -25,6 +25,19 @@ class ArcDatabase {
       }
     });
 
+    this.server.command('database.readCollection', async (client, args, callback) => {
+      const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
+      
+      try {
+        const data = await this.adapter.readCollection(ref);
+        const docs = data.map(doc => ({ ref: ref.doc(doc.id), data: doc }));
+        callback({ error: false, snapshot: { ref, data: docs } });
+      } catch (err) {
+        console.error(err);
+        callback({ error: err.message, snapshot: { ref } });
+      }
+    });
+
     this.server.command('database.createDocument', async (client, args, callback) => {
       const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
       

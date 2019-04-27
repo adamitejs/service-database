@@ -20,7 +20,7 @@ class ArcDatabase {
       
       try {
         const data = await this.adapter.readDocument(ref);
-        await this.rules.validateRule('read', ref, { ref }, { data });
+        await this.rules.validateRule('read', ref, { client, ref }, { data });
         callback({ error: false, snapshot: { ref, data } });
       } catch (err) {
         console.error(err);
@@ -38,7 +38,7 @@ class ArcDatabase {
           data.map(async (doc) => {
             try {
               const docRef = ref.doc(doc.id);
-              await this.rules.validateRule('read', docRef, { ref: docRef }, { data: doc });
+              await this.rules.validateRule('read', docRef, { client, ref: docRef }, { data: doc });
               return { ref: docRef, data: doc };
             } catch (err) {
               console.error(err);
@@ -61,7 +61,7 @@ class ArcDatabase {
       const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
       
       try {
-        await this.rules.validateRule('create', ref, { ref });
+        await this.rules.validateRule('create', ref, { client, ref });
         const data = await this.adapter.createDocument(ref, args.data);
         const documentRef = ref.doc(data.id);
         callback({ error: false, snapshot: { ref: documentRef, data } });
@@ -75,7 +75,7 @@ class ArcDatabase {
       const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
       
       try {
-        await this.rules.validateRule('update', ref, { ref });
+        await this.rules.validateRule('update', ref, { client, ref });
         const data = await this.adapter.updateDocument(ref, args.data);
         callback({ error: false, snapshot: { ref, data } });
       } catch (err) {
@@ -88,7 +88,7 @@ class ArcDatabase {
       const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
       
       try {
-        await this.rules.validateRule('delete', ref, { ref });
+        await this.rules.validateRule('delete', ref, { client, ref });
         await this.adapter.deleteDocument(ref, args.data);
         callback({ error: false, snapshot: { ref } });
       } catch (err) {
@@ -111,7 +111,7 @@ class ArcDatabase {
 
           if (oldData) {
             try {
-              await this.rules.validateRule('read', ref, { ref }, { data: oldData });
+              await this.rules.validateRule('read', ref, { client, ref }, { data: oldData });
             } catch (err) {
               console.error(err);
               oldData = undefined;
@@ -120,7 +120,7 @@ class ArcDatabase {
 
           if (newData) {
             try {
-              await this.rules.validateRule('read', ref, { ref }, { data: newData });
+              await this.rules.validateRule('read', ref, { client, ref }, { data: newData });
             } catch (err) {
               console.error(err);
               newData = undefined;
@@ -163,7 +163,7 @@ class ArcDatabase {
 
           if (oldData) {
             try {
-              await this.rules.validateRule('read', oldDocRef, { ref: oldDocRef }, { data: oldData });
+              await this.rules.validateRule('read', oldDocRef, { client, ref: oldDocRef }, { data: oldData });
             } catch (err) {
               console.error(err);
               oldData = undefined;
@@ -172,7 +172,7 @@ class ArcDatabase {
 
           if (newData) {
             try {
-              await this.rules.validateRule('read', newDocRef, { ref: newDocRef }, { data: newData });
+              await this.rules.validateRule('read', newDocRef, { client, ref: newDocRef }, { data: newData });
             } catch (err) {
               console.error(err);
               newData = undefined;

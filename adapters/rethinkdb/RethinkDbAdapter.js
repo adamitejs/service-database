@@ -76,7 +76,7 @@ class RethinkDbAdapater {
         .get(ref.id)
         .update(data, { returnChanges: true })
         .run(this.connection)
-        .then((result) => result.changes[0].new_val)
+        .then((result) => result.changes.length > 0 && result.changes[0].new_val)
     );
   }
 

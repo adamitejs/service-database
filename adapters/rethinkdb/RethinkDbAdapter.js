@@ -36,10 +36,6 @@ class RethinkDbAdapater {
       query = query.limit(ref._limit);
     }
 
-    if (ref._orderBy) {
-      query = query.orderBy({ [ref._orderBy[0]]: ref._orderBy[1] });
-    }
-
     return (
       query
         .run(this.connection)

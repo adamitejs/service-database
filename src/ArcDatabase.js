@@ -33,8 +33,24 @@ class ArcDatabase {
       
       try {
         const data = await this.adapter.readCollection(ref);
-        const docs = data.map(doc => ({ ref: ref.doc(doc.id), data: doc }));
-        callback({ error: false, snapshot: { ref, data: docs } });
+        
+        const docPromises = (
+          data.map(async (doc) => {
+            try {
+              const docRef = ref.doc(doc.id);
+              await this.rules.validateRule('read', docRef, { ref: docRef }, { data: doc });
+              return { ref: docRef, data: doc };
+            } catch (err) {
+              console.error(err);
+              return undefined;
+            }
+          })
+        );
+        
+        const resolvedDocs = await Promise.all(docPromises);
+        const definedDocs = resolvedDocs.filter(doc => !!doc);
+
+        callback({ error: false, snapshot: { ref, data: definedDocs } });
       } catch (err) {
         console.error(err);
         callback({ error: err.message, snapshot: { ref } });

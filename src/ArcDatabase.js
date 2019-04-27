@@ -109,18 +109,34 @@ class ArcDatabase {
             return this.client.socket.emit(id, { error: err.message, subscription: { ref, id } });
           }
 
-          try {
-            await this.rules.validateRule('read', ref, { ref }, { data: newData });
-
-            client.socket.emit(id, {
-              error: false,
-              subscription: { ref, id },
-              newSnapshot: newData && { ref, data: newData },
-              oldSnapshot: oldData && { ref, data: oldData },
-            });
-          } catch (err) {
-            console.error(err);
+          if (oldData) {
+            try {
+              await this.rules.validateRule('read', ref, { ref }, { data: oldData });
+            } catch (err) {
+              console.error(err);
+              oldData = undefined;
+            }
           }
+
+          if (newData) {
+            try {
+              await this.rules.validateRule('read', ref, { ref }, { data: newData });
+            } catch (err) {
+              console.error(err);
+              newData = undefined;
+            }
+          }
+
+          if (!oldData && !newData) return; // no change required;
+          const changeType = this.computeChangeType(oldData, newData);
+
+          client.socket.emit(id, {
+            error: false,
+            subscription: { ref, id },
+            changeType,
+            newSnapshot: newData && { ref, data: newData },
+            oldSnapshot: oldData && { ref, data: oldData },
+          });
         });
 
         callback({ error: false, subscription: { ref, id } });
@@ -142,31 +158,37 @@ class ArcDatabase {
             return this.client.socket.emit(id, { error: err.message, subscription: { ref, id } });
           }
 
-          const newDocRef = newData && ref.doc(newData.id);
           const oldDocRef = oldData && ref.doc(oldData.id);
+          const newDocRef = newData && ref.doc(newData.id);
 
-          try {            
-            if (newDocRef) {
-              await this.rules.validateRule('read', newDocRef, { newDocRef }, { data: newData });
-            }
-
-            client.socket.emit(id, {
-              error: false,
-              subscription: { ref, id },
-              newSnapshot: newData && { ref: newDocRef, data: newData },
-              oldSnapshot: oldData && { ref: oldDocRef, data: oldData },
-            });
-          } catch (err) {
-            console.error(err);
-
-            if (oldData) {
-              client.socket.emit(id, {
-                error: false,
-                subscription: { ref, id },
-                oldSnapshot: oldData && { ref: oldDocRef, data: oldData },
-              });
+          if (oldData) {
+            try {
+              await this.rules.validateRule('read', oldDocRef, { ref: oldDocRef }, { data: oldData });
+            } catch (err) {
+              console.error(err);
+              oldData = undefined;
             }
           }
+
+          if (newData) {
+            try {
+              await this.rules.validateRule('read', newDocRef, { ref: newDocRef }, { data: newData });
+            } catch (err) {
+              console.error(err);
+              newData = undefined;
+            }
+          }
+
+          if (!oldData && !newData) return; // no change required;
+          const changeType = this.computeChangeType(oldData, newData);
+
+          client.socket.emit(id, {
+            error: false,
+            subscription: { ref, id },
+            changeType,
+            newSnapshot: newData && { ref: newDocRef, data: newData },
+            oldSnapshot: oldData && { ref: oldDocRef, data: oldData },
+          });
         });
 
         callback({ error: false, subscription: { ref, id } });
@@ -179,6 +201,12 @@ class ArcDatabase {
 
   start() {
     this.server.start();
+  }
+
+  computeChangeType(oldData, newData) {
+    if (oldData && newData) return 'update';
+    else if (!oldData && newData) return 'create';
+    else return 'delete';
   }
 }
 

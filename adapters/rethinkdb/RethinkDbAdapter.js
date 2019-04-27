@@ -32,8 +32,21 @@ class RethinkDbAdapater {
         .table(ref.name)
     );
 
-    if (ref._limit) {
-      query = query.limit(ref._limit);
+    if (ref.query.where) {
+      ref.query.where.forEach(where => {
+        query = query.filter(this._getFilter(where));
+      });
+    }
+
+    if (ref.query.orderBy) {
+      ref.query.orderBy.forEach(ordering => {
+        const func = (ordering[1] === 'asc') ? r.asc : r.desc;
+        query = query.orderBy(func(ordering[0]));
+      });
+    }
+
+    if (ref.query.limit) {
+      query = query.limit(ref.query.limit);
     }
 
     return (
@@ -107,6 +120,18 @@ class RethinkDbAdapater {
         callback(err, row.old_val, row.new_val);
       });
     });
+  }
+
+  _getFilter(where) {
+    const [ fieldName, operation, value ] = where;
+    const row = r.row(fieldName);
+
+    if (operation === '==') return row.eq(value);
+    if (operation === '!=') return row.ne(value);
+    if (operation === '>')  return row.gt(value);
+    if (operation === '<')  return row.lt(value);
+    if (operation === '>=') return row.ge(value);
+    if (operation === '<=') return row.le(value);
   }
 }
 

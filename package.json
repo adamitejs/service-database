@@ -1,5 +1,5 @@
 {
-  "name": "@adamite/database",
+  "name": "@adamite/service-database",
   "version": "0.1.0",
   "description": "Adamite database service.",
   "main": "index.js",

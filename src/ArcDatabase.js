@@ -1,10 +1,10 @@
-const { server } = require('@arc/relay');
+const { server } = require('@adamite/relay');
 const { RuleValidator } = require('../rules');
-const DatabaseDeserializer = require('@arc/sdk/core/serialization/DatabaseDeserializer');
+const DatabaseDeserializer = require('@adamite/sdk/core/serialization/DatabaseDeserializer');
 const uuid = require('uuid');
 const rethinkdb = require('../adapters/rethinkdb');
 
-class ArcDatabase {
+class AdamiteDatabase {
   constructor(config) {
     this.config = config;
     this.server = server({ apiUrl: 'http://localhost:9000', port: 9001 });
@@ -210,4 +210,4 @@ class ArcDatabase {
   }
 }
 
-module.exports = ArcDatabase;
+module.exports = AdamiteDatabase;

@@ -1,7 +1,7 @@
 {
-  "name": "@arc/database",
+  "name": "@adamite/database",
   "version": "0.1.0",
-  "description": "Arc database service.",
+  "description": "Adamite database service.",
   "main": "index.js",
   "license": "MIT",
   "dependencies": {

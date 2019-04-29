@@ -1,4 +1,4 @@
-const { DocumentReference, CollectionReference } = require('@arc/sdk/database');
+const { DocumentReference, CollectionReference } = require('@adamite/sdk/database');
 const RuleError = require('./RuleError');
 
 class RuleValidator {

@@ -15,7 +15,7 @@ class VirtualClient {
   async emit(eventName, eventArgs, callback) {
     if (eventName !== 'command') return;
 
-    const { adapter } = this.app.config._database;
+    const { commands: { adapter } } = this.app.config._database;
     const { name, args } = eventArgs;
 
     switch (name) {
@@ -29,6 +29,8 @@ class VirtualClient {
           console.error(err);
           callback({ error: err.message, snapshot: { ref } });
         }
+
+        break;
       }
 
       case 'database.readCollection': {
@@ -42,10 +44,13 @@ class VirtualClient {
           console.error(err);
           callback({ error: err.message, snapshot: { ref } });
         }
+
+        break;
       }
 
       default: {
         callback({ error: 'Operation not supported on VirtualClient: ' + name });
+        break;
       }
     }
   }

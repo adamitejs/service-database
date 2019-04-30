@@ -1,5 +1,5 @@
 const adamite = require('@adamite/sdk');
-require('./VirtualDatabase');
+const { registerDatabasePlugin } = require('./VirtualDatabase');
 const { server } = require('@adamite/relay');
 const DatabaseCommands = require('./DatabaseCommands');
 
@@ -10,6 +10,7 @@ class DatabaseService {
     this.commands = new DatabaseCommands(this);
     this.registerCommands();
     
+    registerDatabasePlugin();
     adamite().initializeApp({ _database: this });
   }
 

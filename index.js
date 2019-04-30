@@ -1,7 +1,7 @@
-const AdamiteDatabase = require('./src/AdamiteDatabase');
+const DatabaseService = require('./src/DatabaseService');
 
 module.exports = function(config) {
-  const database = new AdamiteDatabase(config);
-  database.start();
-  return database;
+  const service = new DatabaseService(config);
+  service.start();
+  return service;
 };

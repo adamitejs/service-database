@@ -14,10 +14,7 @@ class RuleValidator {
       const collectionRule = databaseRule[ref.collection.name];
       if (!collectionRule) return;
 
-      const documentRule = collectionRule['doc'];
-      if (!documentRule) return;
-
-      return documentRule[operation];
+      return collectionRule[operation];
     } else if (ref instanceof CollectionReference) {
       const databaseRule = this.rules[ref.database.name];
       if (!databaseRule) return;

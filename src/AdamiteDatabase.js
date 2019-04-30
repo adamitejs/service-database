@@ -1,3 +1,6 @@
+const adamite = require('@adamite/sdk');
+require('./VirtualDatabase');
+
 const { server } = require('@adamite/relay');
 const { RuleValidator } = require('../rules');
 const DatabaseDeserializer = require('@adamite/sdk/core/serialization/DatabaseDeserializer');
@@ -6,6 +9,7 @@ const rethinkdb = require('../adapters/rethinkdb');
 
 class AdamiteDatabase {
   constructor(config) {
+    adamite().initializeApp({ _database: this });
     this.config = config;
     this.server = server({ apiUrl: 'http://localhost:9000', port: 9001 });
     this.rules = new RuleValidator(this.config.database.rules);

@@ -91,13 +91,13 @@ class RethinkDbAdapater {
     );
   }
 
-  subscribeDocument(ref, callback) {
+  subscribeDocument(ref, options, callback) {
     const changes = (
       r
         .db(ref.collection.database.name)
         .table(ref.collection.name)
         .get(ref.id)
-        .changes({ includeInitial: true })
+        .changes({ includeInitial: options.initialValues })
     );
 
     changes.run(this.connection, (err, cursor) => {
@@ -107,12 +107,12 @@ class RethinkDbAdapater {
     });
   }
 
-  subscribeCollection(ref, callback) {
+  subscribeCollection(ref, options, callback) {
     const changes = (
       r
         .db(ref.database.name)
         .table(ref.name)
-        .changes({ includeInitial: true })
+        .changes({ includeInitial: options.initialValues })
     );
 
     changes.run(this.connection, (err, cursor) => {

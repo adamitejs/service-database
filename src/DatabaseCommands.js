@@ -100,7 +100,12 @@ class DatabaseCommands {
     const subscriptionId = uuid.v4();
 
     try {
-      await this.adapter.subscribeDocument(ref, this._handleDocumentSubscriptionUpdate(ref, client, subscriptionId));
+      await this.adapter.subscribeDocument(
+        ref,
+        { initialValues: args.initialValues || false },
+        this._handleDocumentSubscriptionUpdate(ref, client, subscriptionId)
+      );
+      
       callback({ error: false, subscription: { ref, id: subscriptionId } });
     } catch (err) {
       console.error(err);
@@ -111,9 +116,14 @@ class DatabaseCommands {
   async subscribeCollection(client, args, callback) {
     const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
     const subscriptionId = uuid.v4();
-  
+
     try {
-      await this.adapter.subscribeCollection(ref, this._handleCollectionSubscriptionUpdate(ref, client, subscriptionId));
+      await this.adapter.subscribeCollection(
+        ref,
+        { initialValues: args.initialValues || false },
+        this._handleCollectionSubscriptionUpdate(ref, client, subscriptionId)
+      );
+
       callback({ error: false, subscription: { ref, id: subscriptionId } });
     } catch (err) {
       console.error(err);

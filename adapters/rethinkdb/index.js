@@ -1,4 +1,4 @@
-const RethinkDbAdapter = require('./RethinkDbAdapter');
+const RethinkDbAdapter = require("./RethinkDbAdapter");
 
 module.exports = function(config) {
   return new RethinkDbAdapter(config);

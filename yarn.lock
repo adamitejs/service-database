@@ -2,17 +2,17 @@
 # yarn lockfile v1
 
 
-"@adamite/relay@https://github.com/adamite-framework/relay.git":
+"@adamite/relay@https://github.com/adamitejs/relay.git":
   version "0.1.0"
-  resolved "https://github.com/adamite-framework/relay.git#2e79f209e34c71cb16e1c70e09b798ba19e1b401"
+  resolved "https://github.com/adamitejs/relay.git#3de0152d618887c3ab9844e7ac46a9e5cde5d115"
   dependencies:
     node-fetch "^2.3.0"
     socket.io "^2.2.0"
     uuid "^3.3.2"
 
-"@adamite/sdk@https://github.com/adamite-framework/sdk.git":
+"@adamite/sdk@https://github.com/adamitejs/sdk.git":
   version "0.1.0"
-  resolved "https://github.com/adamite-framework/sdk.git#70164ec73747f9f2087ba0494c7f0198aca663a7"
+  resolved "https://github.com/adamitejs/sdk.git#25fe51ae159f4ded3813341096791583f90137a6"
   dependencies:
     lodash "^4.17.11"
     node-fetch "^2.3.0"
@@ -229,6 +229,11 @@ parseuri@0.0.5:
   integrity sha1-gCBKUNTbt3m/3G6+J3jZDkvOMgo=
   dependencies:
     better-assert "~1.0.0"
+
+prettier@^1.17.0:
+  version "1.17.0"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.17.0.tgz#53b303676eed22cc14a9f0cec09b477b3026c008"
+  integrity sha512-sXe5lSt2WQlCbydGETgfm1YBShgOX4HxQkFPvbxkcwgDvGDeqVau8h+12+lmSVlP3rHPz0oavfddSZg/q+Szjw==
 
 rethinkdb@^2.3.3:
   version "2.3.3"

@@ -1,6 +1,6 @@
-const uuid = require('uuid');
-const RuleValidator = require('../rules/RuleValidator');
-const DatabaseDeserializer = require('@adamite/sdk/core/serialization/DatabaseDeserializer');
+const uuid = require("uuid");
+const RuleValidator = require("../rules/RuleValidator");
+const DatabaseDeserializer = require("@adamite/sdk/core/serialization/DatabaseDeserializer");
 
 class DatabaseCommands {
   constructor(service) {
@@ -15,9 +15,9 @@ class DatabaseCommands {
 
   async createDocument(client, args, callback) {
     const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
-      
+
     try {
-      await this.rules.validateRule('create', ref, { client, ref });
+      await this.rules.validateRule("create", ref, { client, ref });
       const data = await this.adapter.createDocument(ref, args.data);
       const documentRef = ref.doc(data.id);
       callback({ error: false, snapshot: { ref: documentRef, data } });
@@ -29,10 +29,10 @@ class DatabaseCommands {
 
   async readDocument(client, args, callback) {
     const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
-      
+
     try {
       const data = await this.adapter.readDocument(ref);
-      await this.rules.validateRule('read', ref, { client, ref }, { data });
+      await this.rules.validateRule("read", ref, { client, ref }, { data });
       callback({ error: false, snapshot: { ref, data } });
     } catch (err) {
       console.error(err);
@@ -42,9 +42,9 @@ class DatabaseCommands {
 
   async updateDocument(client, args, callback) {
     const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
-      
+
     try {
-      await this.rules.validateRule('update', ref, { client, ref });
+      await this.rules.validateRule("update", ref, { client, ref });
       const data = await this.adapter.updateDocument(ref, args.data);
       callback({ error: false, snapshot: { ref, data } });
     } catch (err) {
@@ -55,9 +55,9 @@ class DatabaseCommands {
 
   async deleteDocument(client, args, callback) {
     const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
-      
+
     try {
-      await this.rules.validateRule('delete', ref, { client, ref });
+      await this.rules.validateRule("delete", ref, { client, ref });
       await this.adapter.deleteDocument(ref, args.data);
       callback({ error: false, snapshot: { ref } });
     } catch (err) {
@@ -68,23 +68,21 @@ class DatabaseCommands {
 
   async readCollection(client, args, callback) {
     const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
-      
+
     try {
       const data = await this.adapter.readCollection(ref);
-      
-      const docPromises = (
-        data.map(async (doc) => {
-          try {
-            const docRef = ref.doc(doc.id);
-            await this.rules.validateRule('read', docRef, { client, ref: docRef }, { data: doc });
-            return { ref: docRef, data: doc };
-          } catch (err) {
-            console.error(err);
-            return undefined;
-          }
-        })
-      );
-      
+
+      const docPromises = data.map(async doc => {
+        try {
+          const docRef = ref.doc(doc.id);
+          await this.rules.validateRule("read", docRef, { client, ref: docRef }, { data: doc });
+          return { ref: docRef, data: doc };
+        } catch (err) {
+          console.error(err);
+          return undefined;
+        }
+      });
+
       const resolvedDocs = await Promise.all(docPromises);
       const definedDocs = resolvedDocs.filter(doc => !!doc);
 
@@ -105,7 +103,7 @@ class DatabaseCommands {
         { initialValues: args.initialValues || false },
         this._handleDocumentSubscriptionUpdate(ref, client, subscriptionId)
       );
-      
+
       callback({ error: false, subscription: { ref, id: subscriptionId } });
     } catch (err) {
       console.error(err);
@@ -135,11 +133,11 @@ class DatabaseCommands {
     return async (err, oldData, newData) => {
       if (err) {
         console.error(err);
-        
-        this.service.client.socket.emit(
-          subscriptionId,
-          { error: err.message, subscription: { ref, id: subscriptionId } }
-        );
+
+        this.service.client.socket.emit(subscriptionId, {
+          error: err.message,
+          subscription: { ref, id: subscriptionId }
+        });
 
         return;
       }
@@ -149,7 +147,7 @@ class DatabaseCommands {
 
       if (oldData) {
         try {
-          await this.rules.validateRule('read', oldDocRef, { client, ref: oldDocRef }, { data: oldData });
+          await this.rules.validateRule("read", oldDocRef, { client, ref: oldDocRef }, { data: oldData });
         } catch (err) {
           console.error(err);
           oldData = undefined;
@@ -158,7 +156,7 @@ class DatabaseCommands {
 
       if (newData) {
         try {
-          await this.rules.validateRule('read', newDocRef, { client, ref: newDocRef }, { data: newData });
+          await this.rules.validateRule("read", newDocRef, { client, ref: newDocRef }, { data: newData });
         } catch (err) {
           console.error(err);
           newData = undefined;
@@ -173,27 +171,27 @@ class DatabaseCommands {
         subscription: { ref, id: subscriptionId },
         changeType,
         newSnapshot: newData && { ref: newDocRef, data: newData },
-        oldSnapshot: oldData && { ref: oldDocRef, data: oldData },
+        oldSnapshot: oldData && { ref: oldDocRef, data: oldData }
       });
-    }
+    };
   }
 
   _handleDocumentSubscriptionUpdate(ref, client, subscriptionId) {
     return async (err, oldData, newData) => {
       if (err) {
         console.error(err);
-        
-        this.service.client.socket.emit(
-          subscriptionId,
-          { error: err.message, subscription: { ref, id: subscriptionId } }
-        );
+
+        this.service.client.socket.emit(subscriptionId, {
+          error: err.message,
+          subscription: { ref, id: subscriptionId }
+        });
 
         return;
       }
 
       if (oldData) {
         try {
-          await this.rules.validateRule('read', ref, { client, ref }, { data: oldData });
+          await this.rules.validateRule("read", ref, { client, ref }, { data: oldData });
         } catch (err) {
           console.error(err);
           oldData = undefined;
@@ -202,7 +200,7 @@ class DatabaseCommands {
 
       if (newData) {
         try {
-          await this.rules.validateRule('read', ref, { client, ref }, { data: newData });
+          await this.rules.validateRule("read", ref, { client, ref }, { data: newData });
         } catch (err) {
           console.error(err);
           newData = undefined;
@@ -217,15 +215,15 @@ class DatabaseCommands {
         subscription: { ref, id: subscriptionId },
         changeType,
         newSnapshot: newData && { ref, data: newData },
-        oldSnapshot: oldData && { ref, data: oldData },
+        oldSnapshot: oldData && { ref, data: oldData }
       });
     };
   }
 
   _computeChangeType(oldData, newData) {
-    if (oldData && newData) return 'update';
-    else if (!oldData && newData) return 'create';
-    else return 'delete';
+    if (oldData && newData) return "update";
+    else if (!oldData && newData) return "create";
+    else return "delete";
   }
 }
 

@@ -1,5 +1,5 @@
-const { DocumentReference, CollectionReference } = require('@adamite/sdk/database');
-const RuleError = require('./RuleError');
+const { DocumentReference, CollectionReference } = require("@adamite/sdk/database");
+const RuleError = require("./RuleError");
 
 class RuleValidator {
   constructor(rules) {

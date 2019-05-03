@@ -1,4 +1,4 @@
-const DatabaseDeserializer = require('@adamite/sdk/core/serialization/DatabaseDeserializer');
+const DatabaseDeserializer = require("@adamite/sdk/core/serialization/DatabaseDeserializer");
 
 /**
  * VirtualClient serves as an artificial socket.io client instance, which
@@ -13,15 +13,17 @@ class VirtualClient {
   }
 
   async emit(eventName, eventArgs, callback) {
-    if (eventName !== 'command') return;
+    if (eventName !== "command") return;
 
-    const { commands: { adapter } } = this.app.config._database;
+    const {
+      commands: { adapter }
+    } = this.app.config._database;
     const { name, args } = eventArgs;
 
     switch (name) {
-      case 'database.readDocument': {
+      case "database.readDocument": {
         const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
-      
+
         try {
           const data = await adapter.readDocument(ref);
           callback({ error: false, snapshot: { ref, data } });
@@ -33,12 +35,12 @@ class VirtualClient {
         break;
       }
 
-      case 'database.readCollection': {
+      case "database.readCollection": {
         const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
-        
+
         try {
           const data = await adapter.readCollection(ref);
-          const docs = data.map((doc) => ({ ref: ref.doc(doc.id), data: doc }))
+          const docs = data.map(doc => ({ ref: ref.doc(doc.id), data: doc }));
           callback({ error: false, snapshot: { ref, data: docs } });
         } catch (err) {
           console.error(err);
@@ -49,7 +51,7 @@ class VirtualClient {
       }
 
       default: {
-        callback({ error: 'Operation not supported on VirtualClient: ' + name });
+        callback({ error: "Operation not supported on VirtualClient: " + name });
         break;
       }
     }

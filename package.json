@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "jest --passWithNoTests",
+    "test": "jest",
     "format": "prettier --print-width 120 --write \"**/*.js\""
   },
   "dependencies": {
@@ -27,6 +27,8 @@
   },
   "jest": {
     "collectCoverageFrom": [
+      "adapters/**/*.js",
+      "rules/**/*.js",
       "src/**/*.js"
     ],
     "coverageDirectory": "./coverage/",

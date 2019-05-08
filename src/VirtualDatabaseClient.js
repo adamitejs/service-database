@@ -1,4 +1,4 @@
-const DatabaseDeserializer = require("@adamite/sdk/core/serialization/DatabaseDeserializer");
+const { DatabaseDeserializer } = require("@adamite/sdk");
 
 /**
  * VirtualClient serves as an artificial socket.io client instance, which
@@ -36,7 +36,9 @@ class VirtualClient {
       }
 
       case "database.readCollection": {
-        const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
+        const ref = DatabaseDeserializer.deserializeCollectionReference(
+          args.ref
+        );
 
         try {
           const data = await adapter.readCollection(ref);
@@ -51,7 +53,9 @@ class VirtualClient {
       }
 
       default: {
-        callback({ error: "Operation not supported on VirtualClient: " + name });
+        callback({
+          error: "Operation not supported on VirtualClient: " + name
+        });
         break;
       }
     }

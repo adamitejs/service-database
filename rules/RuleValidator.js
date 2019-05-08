@@ -1,4 +1,4 @@
-const { DocumentReference, CollectionReference } = require("@adamite/sdk/database");
+const { DocumentReference, CollectionReference } = require("@adamite/sdk");
 const RuleError = require("./RuleError");
 
 class RuleValidator {
@@ -31,7 +31,11 @@ class RuleValidator {
     if (!rule) return; // no rule, no prob
 
     const valid = await rule(request, response);
-    if (!valid) throw new RuleError(`Operation ${operation.toUpperCase()} denied on '${ref.id || ref.name}'.`);
+    if (!valid)
+      throw new RuleError(
+        `Operation ${operation.toUpperCase()} denied on '${ref.id ||
+          ref.name}'.`
+      );
   }
 }
 

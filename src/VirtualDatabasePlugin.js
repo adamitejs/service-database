@@ -1,5 +1,5 @@
 const VirtualDatabaseClient = require("./VirtualDatabaseClient");
-const { DatabaseReference } = require("@adamite/sdk/database");
+const { DatabaseReference } = require("@adamite/sdk");
 
 class VirtualDatabasePlugin {
   constructor(app) {

@@ -1,6 +1,8 @@
+const { isEqual } = require("lodash");
 const uuid = require("uuid");
+const traverse = require("traverse");
 const RuleValidator = require("../rules/RuleValidator");
-const { DatabaseDeserializer } = require("@adamite/sdk");
+const { DatabaseDeserializer, DatabaseServerValue } = require("@adamite/sdk");
 
 class DatabaseCommands {
   constructor(service) {
@@ -17,6 +19,7 @@ class DatabaseCommands {
     const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
 
     try {
+      if (args.data) this._replaceServerValues(args.data);
       await this.rules.validateRule("create", ref, { client, ref });
       const data = await this.adapter.createDocument(ref, args.data);
       const documentRef = ref.doc(data.id);
@@ -44,6 +47,7 @@ class DatabaseCommands {
     const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
 
     try {
+      if (args.data) this._replaceServerValues(args.data);
       await this.rules.validateRule("update", ref, { client, ref });
       const data = await this.adapter.updateDocument(ref, args.data);
       callback({ error: false, snapshot: { ref, data } });
@@ -132,6 +136,14 @@ class DatabaseCommands {
       console.error(err);
       callback({ error: err.message, subscription: { ref } });
     }
+  }
+
+  _replaceServerValues(data) {
+    traverse(data).forEach(function(x) {
+      if (isEqual(x, DatabaseServerValue.timestamp)) {
+        this.update(Date.now());
+      }
+    });
   }
 
   _handleCollectionSubscriptionUpdate(ref, client, subscriptionId) {

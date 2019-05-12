@@ -18,7 +18,9 @@ class RethinkDbAdapater {
     );
   }
 
-  readDocument(ref) {
+  async readDocument(ref) {
+    await this._createCollectionTableIfNecessary(ref.collection);
+
     return r
       .db(ref.collection.database.name)
       .table(ref.collection.name)
@@ -26,7 +28,9 @@ class RethinkDbAdapater {
       .run(this.connection);
   }
 
-  readCollection(ref) {
+  async readCollection(ref) {
+    await this._createCollectionTableIfNecessary(ref);
+
     let query = r.db(ref.database.name).table(ref.name);
 
     if (ref.query.where) {
@@ -49,7 +53,9 @@ class RethinkDbAdapater {
     return query.run(this.connection).then(r => r.toArray());
   }
 
-  createDocument(ref, data) {
+  async createDocument(ref, data) {
+    await this._createCollectionTableIfNecessary(ref);
+
     return r
       .db(ref.database.name)
       .table(ref.name)
@@ -59,7 +65,9 @@ class RethinkDbAdapater {
     // TODO: What if the result has a problem? Revisit error handling here later.
   }
 
-  updateDocument(ref, data) {
+  async updateDocument(ref, data) {
+    await this._createCollectionTableIfNecessary(ref.collection);
+
     return r
       .db(ref.collection.database.name)
       .table(ref.collection.name)
@@ -69,13 +77,18 @@ class RethinkDbAdapater {
       .then(result => result.changes.length > 0 && result.changes[0].new_val);
   }
 
-  deleteDocument(ref) {
-    return r
+  async deleteDocument(ref) {
+    await this._createCollectionTableIfNecessary(ref.collection);
+
+    const result = await r
       .db(ref.collection.database.name)
       .table(ref.collection.name)
       .get(ref.id)
       .delete()
       .run(this.connection);
+
+    await this._deleteCollectionTableIfNecessary(ref.collection);
+    return result;
   }
 
   subscribeDocument(ref, options, callback) {
@@ -103,6 +116,21 @@ class RethinkDbAdapater {
         callback(err, row.old_val, row.new_val);
       });
     });
+  }
+
+  async _createCollectionTableIfNecessary(ref) {
+    const db = r.db(ref.database.name);
+    const tables = await db.tableList().run(this.connection);
+    if (tables.indexOf(ref.name) > -1) return;
+    await db.tableCreate(ref.name).run(this.connection);
+  }
+
+  async _deleteCollectionTableIfNecessary(ref) {
+    const db = r.db(ref.database.name);
+    const table = db.table(ref.name);
+    const rowCount = await table.count().run(this.connection);
+    if (rowCount > 0) return;
+    await db.tableDrop(ref.name).run(this.connection);
   }
 
   _getFilter(where) {

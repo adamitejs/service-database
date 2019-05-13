@@ -91,7 +91,9 @@ class RethinkDbAdapater {
     return result;
   }
 
-  subscribeDocument(ref, options, callback) {
+  async subscribeDocument(ref, options, callback) {
+    await this._createCollectionTableIfNecessary(ref.collection);
+
     const changes = r
       .db(ref.collection.database.name)
       .table(ref.collection.name)
@@ -105,7 +107,9 @@ class RethinkDbAdapater {
     });
   }
 
-  subscribeCollection(ref, options, callback) {
+  async subscribeCollection(ref, options, callback) {
+    await this._createCollectionTableIfNecessary(ref);
+
     const changes = r
       .db(ref.database.name)
       .table(ref.name)

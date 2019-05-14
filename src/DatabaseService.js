@@ -1,5 +1,5 @@
 const adamite = require("@adamite/sdk").default;
-const { server } = require("@adamite/relay");
+const server = require("@adamite/relay-server");
 const VirtualDatabasePlugin = require("./VirtualDatabasePlugin");
 const DatabaseCommands = require("./DatabaseCommands");
 

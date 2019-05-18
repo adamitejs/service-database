@@ -9,8 +9,8 @@
     "format": "prettier --print-width 120 --write \"**/*.js\""
   },
   "dependencies": {
-    "@adamite/relay-server": "^0.1.0",
-    "@adamite/sdk": "^0.1.0",
+    "@adamite/relay-server": "file:../relay-server",
+    "@adamite/sdk": "file:../sdk",
     "lodash": "^4.17.11",
     "rethinkdb": "^2.3.3",
     "traverse": "^0.6.6",

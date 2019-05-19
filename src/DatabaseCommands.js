@@ -20,7 +20,7 @@ class DatabaseCommands {
 
     try {
       if (args.data) this._replaceServerValues(args.data);
-      await this.rules.validateRule("create", ref, { client, ref });
+      await this.rules.validateRule("create", ref, { client, ref, data: args.data });
       const data = await this.adapter.createDocument(ref, args.data);
       const documentRef = ref.doc(data.id);
       callback({ error: false, snapshot: { ref: documentRef, data } });
@@ -48,7 +48,7 @@ class DatabaseCommands {
 
     try {
       if (args.data) this._replaceServerValues(args.data);
-      await this.rules.validateRule("update", ref, { client, ref });
+      await this.rules.validateRule("update", ref, { client, ref, data: args.data });
       const data = await this.adapter.updateDocument(ref, args.data);
       callback({ error: false, snapshot: { ref, data } });
     } catch (err) {
@@ -79,12 +79,7 @@ class DatabaseCommands {
       const docPromises = data.map(async doc => {
         try {
           const docRef = ref.doc(doc.id);
-          await this.rules.validateRule(
-            "read",
-            docRef,
-            { client, ref: docRef },
-            { data: doc }
-          );
+          await this.rules.validateRule("read", docRef, { client, ref: docRef }, { data: doc });
           return { ref: docRef, data: doc };
         } catch (err) {
           console.error(err);
@@ -164,12 +159,7 @@ class DatabaseCommands {
 
       if (oldData) {
         try {
-          await this.rules.validateRule(
-            "read",
-            oldDocRef,
-            { client, ref: oldDocRef },
-            { data: oldData }
-          );
+          await this.rules.validateRule("read", oldDocRef, { client, ref: oldDocRef }, { data: oldData });
         } catch (err) {
           console.error(err);
           oldData = undefined;
@@ -178,12 +168,7 @@ class DatabaseCommands {
 
       if (newData) {
         try {
-          await this.rules.validateRule(
-            "read",
-            newDocRef,
-            { client, ref: newDocRef },
-            { data: newData }
-          );
+          await this.rules.validateRule("read", newDocRef, { client, ref: newDocRef }, { data: newData });
         } catch (err) {
           console.error(err);
           newData = undefined;
@@ -218,12 +203,7 @@ class DatabaseCommands {
 
       if (oldData) {
         try {
-          await this.rules.validateRule(
-            "read",
-            ref,
-            { client, ref },
-            { data: oldData }
-          );
+          await this.rules.validateRule("read", ref, { client, ref }, { data: oldData });
         } catch (err) {
           console.error(err);
           oldData = undefined;
@@ -232,12 +212,7 @@ class DatabaseCommands {
 
       if (newData) {
         try {
-          await this.rules.validateRule(
-            "read",
-            ref,
-            { client, ref },
-            { data: newData }
-          );
+          await this.rules.validateRule("read", ref, { client, ref }, { data: newData });
         } catch (err) {
           console.error(err);
           newData = undefined;

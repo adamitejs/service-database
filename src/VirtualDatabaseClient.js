@@ -12,6 +12,22 @@ class VirtualClient {
     this.app = app;
   }
 
+  async invoke(eventName, eventArgs) {
+    return new Promise((resolve, reject) => {
+      this.emit(
+        "command",
+        {
+          name: `database.${eventName}`,
+          args: eventArgs
+        },
+        response => {
+          if (response.error) reject(response.error);
+          else resolve(response);
+        }
+      );
+    });
+  }
+
   async emit(eventName, eventArgs, callback) {
     if (eventName !== "command") return;
 
@@ -36,9 +52,7 @@ class VirtualClient {
       }
 
       case "database.readCollection": {
-        const ref = DatabaseDeserializer.deserializeCollectionReference(
-          args.ref
-        );
+        const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
 
         try {
           const data = await adapter.readCollection(ref);

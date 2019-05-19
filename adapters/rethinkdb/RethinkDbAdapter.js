@@ -91,14 +91,14 @@ class RethinkDbAdapater {
     return result;
   }
 
-  async subscribeDocument(ref, options, callback) {
+  async subscribeDocument(ref, callback) {
     await this._createCollectionTableIfNecessary(ref.collection);
 
     const changes = r
       .db(ref.collection.database.name)
       .table(ref.collection.name)
       .get(ref.id)
-      .changes({ includeInitial: options.initialValues });
+      .changes();
 
     changes.run(this.connection, (err, cursor) => {
       cursor.each((err, row) => {
@@ -107,13 +107,13 @@ class RethinkDbAdapater {
     });
   }
 
-  async subscribeCollection(ref, options, callback) {
+  async subscribeCollection(ref, callback) {
     await this._createCollectionTableIfNecessary(ref);
 
     const changes = r
       .db(ref.database.name)
       .table(ref.name)
-      .changes({ includeInitial: options.initialValues });
+      .changes();
 
     changes.run(this.connection, (err, cursor) => {
       cursor.each((err, row) => {

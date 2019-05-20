@@ -3,6 +3,7 @@ const r = require("rethinkdb");
 class RethinkDbAdapater {
   constructor(config) {
     this.config = config;
+    this.subscriptions = {};
   }
 
   connect() {
@@ -91,7 +92,7 @@ class RethinkDbAdapater {
     return result;
   }
 
-  async subscribeDocument(ref, callback) {
+  async subscribeDocument(subscriptionId, ref, callback) {
     await this._createCollectionTableIfNecessary(ref.collection);
 
     const changes = r
@@ -101,13 +102,15 @@ class RethinkDbAdapater {
       .changes();
 
     changes.run(this.connection, (err, cursor) => {
+      this.subscriptions[subscriptionId] = cursor;
+
       cursor.each((err, row) => {
         callback(err, row.old_val, row.new_val);
       });
     });
   }
 
-  async subscribeCollection(ref, callback) {
+  async subscribeCollection(subscriptionId, ref, callback) {
     await this._createCollectionTableIfNecessary(ref);
 
     const changes = r
@@ -116,10 +119,18 @@ class RethinkDbAdapater {
       .changes();
 
     changes.run(this.connection, (err, cursor) => {
+      this.subscriptions[subscriptionId] = cursor;
+
       cursor.each((err, row) => {
         callback(err, row.old_val, row.new_val);
       });
     });
+  }
+
+  unsubscribe(subscriptionId) {
+    if (!this.subscriptions[subscriptionId]) return;
+    this.subscriptions[subscriptionId].close();
+    delete this.subscriptions[subscriptionId];
   }
 
   async _createCollectionTableIfNecessary(ref) {

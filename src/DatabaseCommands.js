@@ -102,7 +102,11 @@ class DatabaseCommands {
     const subscriptionId = uuid.v4();
 
     try {
-      await this.adapter.subscribeDocument(ref, this._handleDocumentSubscriptionUpdate(ref, client, subscriptionId));
+      await this.adapter.subscribeDocument(
+        subscriptionId,
+        ref,
+        this._handleDocumentSubscriptionUpdate(ref, client, subscriptionId)
+      );
 
       callback({ error: false, subscription: { ref, id: subscriptionId } });
     } catch (err) {
@@ -117,6 +121,7 @@ class DatabaseCommands {
 
     try {
       await this.adapter.subscribeCollection(
+        subscriptionId,
         ref,
         this._handleCollectionSubscriptionUpdate(ref, client, subscriptionId)
       );
@@ -125,6 +130,16 @@ class DatabaseCommands {
     } catch (err) {
       console.error(err);
       callback({ error: err.message, subscription: { ref } });
+    }
+  }
+
+  unsubscribe(client, args, callback) {
+    try {
+      this.adapter.unsubscribe(args.subscriptionId);
+      callback({ error: false });
+    } catch (err) {
+      console.error(err);
+      callback({ error: err.message });
     }
   }
 

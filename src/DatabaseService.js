@@ -1,12 +1,16 @@
 const adamite = require("@adamite/sdk").default;
 const server = require("@adamite/relay-server").default;
+const DatabaseRouter = require("./routers/DatabaseRouter");
 const VirtualDatabasePlugin = require("./VirtualDatabasePlugin");
 const DatabaseCommands = require("./DatabaseCommands");
 
 class DatabaseService {
   constructor(config) {
     this.config = config;
-    this.server = server({ apiUrl: "http://localhost:9000", port: 9001 }, this.config);
+    this.server = server(
+      { name: "@adamite/service-database", apiUrl: "http://localhost:9000", port: 9001 },
+      this.config
+    );
     this.commands = new DatabaseCommands(this);
     this.registerCommands();
 

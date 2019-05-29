@@ -1,6 +1,5 @@
 const adamite = require("@adamite/sdk").default;
 const server = require("@adamite/relay-server").default;
-const DatabaseRouter = require("./routers/DatabaseRouter");
 const VirtualDatabasePlugin = require("./VirtualDatabasePlugin");
 const DatabaseCommands = require("./DatabaseCommands");
 

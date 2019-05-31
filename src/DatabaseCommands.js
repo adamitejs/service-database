@@ -20,7 +20,8 @@ class DatabaseCommands {
 
     try {
       if (args.data) this._replaceServerValues(args.data);
-      await this.rules.validateRule("create", ref, { client, ref, data: args.data });
+      !client.socket.request._query.secret &&
+        (await this.rules.validateRule("create", ref, { client, ref, data: args.data }));
       const data = await this.adapter.createDocument(ref, args.data);
       const documentRef = ref.doc(data.id);
       callback({ error: false, snapshot: { ref: documentRef, data } });
@@ -35,7 +36,7 @@ class DatabaseCommands {
 
     try {
       const data = await this.adapter.readDocument(ref);
-      await this.rules.validateRule("read", ref, { client, ref }, { data });
+      !client.socket.request._query.secret && (await this.rules.validateRule("read", ref, { client, ref }, { data }));
       callback({ error: false, snapshot: { ref, data } });
     } catch (err) {
       console.error(err);
@@ -48,8 +49,9 @@ class DatabaseCommands {
 
     try {
       if (args.data) this._replaceServerValues(args.data);
-      await this.rules.validateRule("update", ref, { client, ref, data: args.data });
-      const data = await this.adapter.updateDocument(ref, args.data);
+      !client.socket.request._query.secret &&
+        (await this.rules.validateRule("update", ref, { client, ref, data: args.data }));
+      const data = await this.adapter.updateDocument(ref, args.data, args.options);
       callback({ error: false, snapshot: { ref, data } });
     } catch (err) {
       console.error(err);
@@ -61,7 +63,7 @@ class DatabaseCommands {
     const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
 
     try {
-      await this.rules.validateRule("delete", ref, { client, ref });
+      !client.socket.request._query.secret && (await this.rules.validateRule("delete", ref, { client, ref }));
       await this.adapter.deleteDocument(ref, args.data);
       callback({ error: false, snapshot: { ref } });
     } catch (err) {
@@ -79,7 +81,8 @@ class DatabaseCommands {
       const docPromises = data.map(async doc => {
         try {
           const docRef = ref.doc(doc.id);
-          await this.rules.validateRule("read", docRef, { client, ref: docRef }, { data: doc });
+          !client.socket.request._query.secret &&
+            (await this.rules.validateRule("read", docRef, { client, ref: docRef }, { data: doc }));
           return { ref: docRef, data: doc };
         } catch (err) {
           console.error(err);
@@ -180,7 +183,8 @@ class DatabaseCommands {
 
       if (oldData) {
         try {
-          await this.rules.validateRule("read", oldDocRef, { client, ref: oldDocRef }, { data: oldData });
+          !client.socket.request._query.secret &&
+            (await this.rules.validateRule("read", oldDocRef, { client, ref: oldDocRef }, { data: oldData }));
         } catch (err) {
           console.error(err);
           oldData = undefined;
@@ -189,7 +193,8 @@ class DatabaseCommands {
 
       if (newData) {
         try {
-          await this.rules.validateRule("read", newDocRef, { client, ref: newDocRef }, { data: newData });
+          !client.socket.request._query.secret &&
+            (await this.rules.validateRule("read", newDocRef, { client, ref: newDocRef }, { data: newData }));
         } catch (err) {
           console.error(err);
           newData = undefined;
@@ -224,7 +229,8 @@ class DatabaseCommands {
 
       if (oldData) {
         try {
-          await this.rules.validateRule("read", ref, { client, ref }, { data: oldData });
+          !client.socket.request._query.secret &&
+            (await this.rules.validateRule("read", ref, { client, ref }, { data: oldData }));
         } catch (err) {
           console.error(err);
           oldData = undefined;
@@ -233,7 +239,8 @@ class DatabaseCommands {
 
       if (newData) {
         try {
-          await this.rules.validateRule("read", ref, { client, ref }, { data: newData });
+          !client.socket.request._query.secret &&
+            (await this.rules.validateRule("read", ref, { client, ref }, { data: newData }));
         } catch (err) {
           console.error(err);
           newData = undefined;

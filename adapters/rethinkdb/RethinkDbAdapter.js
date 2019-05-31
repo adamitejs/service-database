@@ -141,6 +141,15 @@ class RethinkDbAdapater {
     delete this.subscriptions[subscriptionId];
   }
 
+  async getCollections(ref) {
+    const tableList = await r
+      .db(ref.name)
+      .tableList()
+      .run(this.connection);
+
+    return tableList;
+  }
+
   async _createCollectionTableIfNecessary(ref) {
     const db = r.db(ref.database.name);
     const tables = await db.tableList().run(this.connection);

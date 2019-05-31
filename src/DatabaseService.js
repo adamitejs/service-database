@@ -26,6 +26,8 @@ class DatabaseService {
     this.server.command("database.subscribeDocument", this.commands.subscribeDocument.bind(this.commands));
     this.server.command("database.subscribeCollection", this.commands.subscribeCollection.bind(this.commands));
     this.server.command("database.unsubscribe", this.commands.unsubscribe.bind(this.commands));
+
+    this.server.command("database.admin.getCollections", this.commands.adminGetCollections.bind(this.commands));
   }
 
   start() {

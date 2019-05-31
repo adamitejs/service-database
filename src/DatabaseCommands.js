@@ -143,6 +143,17 @@ class DatabaseCommands {
     }
   }
 
+  async adminGetCollections(client, args, callback) {
+    try {
+      const ref = DatabaseDeserializer.deserializeDatabaseReference(args.ref);
+      const collections = await this.adapter.getCollections(ref);
+      callback({ error: false, collections });
+    } catch (err) {
+      console.error(err);
+      callback({ error: err.message });
+    }
+  }
+
   _replaceServerValues(data) {
     traverse(data).forEach(function(x) {
       if (isEqual(x, DatabaseServerValue.timestamp)) {

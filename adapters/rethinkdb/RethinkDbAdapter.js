@@ -66,8 +66,25 @@ class RethinkDbAdapater {
     // TODO: What if the result has a problem? Revisit error handling here later.
   }
 
-  async updateDocument(ref, data) {
+  async updateDocument(ref, data, options = {}) {
     await this._createCollectionTableIfNecessary(ref.collection);
+
+    if (options.replace) {
+      return r
+        .db(ref.collection.database.name)
+        .table(ref.collection.name)
+        .replace(
+          {
+            id: ref.id,
+            ...data
+          },
+          {
+            returnChanges: true
+          }
+        )
+        .run(this.connection)
+        .then(result => result.changes.length > 0 && result.changes[0].new_val);
+    }
 
     return r
       .db(ref.collection.database.name)

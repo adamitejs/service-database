@@ -148,6 +148,7 @@ class DatabaseCommands {
 
   async adminGetCollections(client, args, callback) {
     try {
+      this._verifyAdminAccess(client);
       const ref = DatabaseDeserializer.deserializeDatabaseReference(args.ref);
       const collections = await this.adapter.getCollections(ref);
       callback({ error: false, collections });
@@ -155,6 +156,10 @@ class DatabaseCommands {
       console.error(err);
       callback({ error: err.message });
     }
+  }
+
+  _verifyAdminAccess(client) {
+    if (!client.socket.request._query.secret) throw new Error("Admin commands require secret authentication.");
   }
 
   _replaceServerValues(data) {

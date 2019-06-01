@@ -72,8 +72,16 @@ class RethinkDbAdapater {
     return r
       .db(ref.collection.database.name)
       .table(ref.collection.name)
-      .get(ref.id)
-      .update(data, { returnChanges: true })
+      .insert(
+        {
+          id: ref.id,
+          ...data
+        },
+        {
+          conflict: "update",
+          returnChanges: true
+        }
+      )
       .run(this.connection)
       .then(result => result.changes.length > 0 && result.changes[0].new_val);
   }

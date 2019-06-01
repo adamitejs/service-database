@@ -6,7 +6,10 @@ const DatabaseCommands = require("./DatabaseCommands");
 class DatabaseService {
   constructor(config) {
     this.config = config;
-    this.server = server({ apiUrl: "http://localhost:9000", port: 9001 }, this.config);
+    this.server = server(
+      { name: "@adamite/service-database", apiUrl: "http://localhost:9000", port: 9001 },
+      this.config
+    );
     this.commands = new DatabaseCommands(this);
     this.registerCommands();
 

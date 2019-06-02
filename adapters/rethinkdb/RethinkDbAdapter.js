@@ -4,6 +4,7 @@ class RethinkDbAdapater {
   constructor(config) {
     this.config = config;
     this.subscriptions = {};
+    this.tablesBeingCreated = {};
   }
 
   connect() {
@@ -168,10 +169,13 @@ class RethinkDbAdapater {
   }
 
   async _createCollectionTableIfNecessary(ref) {
+    if (this.tablesBeingCreated[`${ref.database.name}.${ref.name}`]) return;
+    this.tablesBeingCreated[`${ref.database.name}.${ref.name}`] = true;
     const db = r.db(ref.database.name);
     const tables = await db.tableList().run(this.connection);
     if (tables.indexOf(ref.name) > -1) return;
     await db.tableCreate(ref.name).run(this.connection);
+    delete this.tablesBeingCreated[`${ref.database.name}.${ref.name}`];
   }
 
   async _deleteCollectionTableIfNecessary(ref) {

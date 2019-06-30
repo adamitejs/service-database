@@ -1,4 +1,5 @@
 const RuleValidator = require("../../rules/RuleValidator");
+const RuleError = require("../../rules/RuleError");
 
 const { DocumentReference, CollectionReference } = require("@adamite/sdk");
 
@@ -10,7 +11,6 @@ function MockDocumentReference(databaseName, collectionName) {
     }
   };
 }
-
 MockDocumentReference.prototype = DocumentReference.prototype;
 
 function MockCollectionReference(databaseName, collectionName) {
@@ -24,6 +24,34 @@ MockCollectionReference.prototype = CollectionReference.prototype;
 describe("RuleValidator", () => {
   it("Can be constructed", () => {
     const x = new RuleValidator(null);
+  });
+
+  describe("validateRule", () => {
+    it("Can fail on a executing rule", async () => {
+      const doc = new MockDocumentReference("foo", "bar");
+
+      const x = new RuleValidator({ foo: { bar: { tickle: () => false } } });
+
+      expect(x.validateRule("tickle", doc, {}, {})).rejects.toEqual(
+        new RuleError(`Operation TICKLE denied on 'undefined'.`)
+      );
+    });
+
+    it("Can pass on a executing rule", async () => {
+      const doc = new MockDocumentReference("foo", "bar");
+
+      const x = new RuleValidator({ foo: { bar: { tickle: () => true } } });
+
+      expect(x.validateRule("tickle", doc, {}, {})).resolves.toEqual(undefined);
+    });
+
+    it("Will pass when rule not found", () => {
+      const doc = new MockDocumentReference("foo", "bar");
+
+      const x = new RuleValidator({ foo: {} });
+
+      expect(x.validateRule("tickle", doc, {}, {})).resolves.toEqual(undefined);
+    });
   });
 
   describe("getRuleForRef", () => {

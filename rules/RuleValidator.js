@@ -6,24 +6,31 @@ class RuleValidator {
     this.rules = rules;
   }
 
+  getRuleForDbCollection(databaseName, collectionName, operation) {
+    const databaseRule = this.rules[databaseName];
+    if (!databaseRule) return;
+
+    const collectionRule = databaseRule[collectionName];
+    if (!collectionRule) return;
+
+    return collectionRule[operation];
+  }
+
+  getDocumentRule(ref, operation) {
+    return this.getRuleForDbCollection(ref.collection.database.name, ref.collection.name, operation);
+  }
+
+  getCollectionRule(ref, operation) {
+    return this.getRuleForDbCollection(ref.database.name, ref.name, operation);
+  }
+
   getRuleForRef(ref, operation) {
     if (ref instanceof DocumentReference) {
-      const databaseRule = this.rules[ref.collection.database.name];
-      if (!databaseRule) return;
-
-      const collectionRule = databaseRule[ref.collection.name];
-      if (!collectionRule) return;
-
-      return collectionRule[operation];
+      return this.getDocumentRule(ref, operation);
     } else if (ref instanceof CollectionReference) {
-      const databaseRule = this.rules[ref.database.name];
-      if (!databaseRule) return;
-
-      const collectionRule = databaseRule[ref.name];
-      if (!collectionRule) return;
-
-      return collectionRule[operation];
+      return this.getCollectionRule(ref, operation);
     }
+    //TODO: throw ??
   }
 
   async validateRule(operation, ref, request, response) {
@@ -31,11 +38,7 @@ class RuleValidator {
     if (!rule) return; // no rule, no prob
 
     const valid = await rule(request, response);
-    if (!valid)
-      throw new RuleError(
-        `Operation ${operation.toUpperCase()} denied on '${ref.id ||
-          ref.name}'.`
-      );
+    if (!valid) throw new RuleError(`Operation ${operation.toUpperCase()} denied on '${ref.id || ref.name}'.`);
   }
 }
 

@@ -5,8 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "jest",
-    "format": "prettier --print-width 127 --write \"**/*.js\""
+    "test": "jest"
   },
   "dependencies": {
     "@adamite/relay-server": "latest",
@@ -24,7 +23,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --print-width 120 --staged"
+      "pre-commit": "pretty-quick --staged"
     }
   },
   "jest": {

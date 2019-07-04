@@ -8,8 +8,10 @@ class RethinkDbAdapater {
   }
 
   connect() {
+    //console.log("Database adapted recieved ", this.config.database);
+
     r.connect(
-      this.config || {
+      this.config.database.config || {
         host: "localhost",
         port: 28015
       },

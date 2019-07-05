@@ -139,12 +139,28 @@ class RethinkDbAdapater {
   async subscribeCollection(subscriptionId, ref, callback) {
     await this._createCollectionTableIfNecessary(ref);
 
-    const changes = r
-      .db(ref.database.name)
-      .table(ref.name)
-      .changes();
+    let query = r.db(ref.database.name).table(ref.name);
 
-    changes.run(this.connection, (err, cursor) => {
+    if (ref.query.where) {
+      ref.query.where.forEach(where => {
+        query = query.filter(this._getFilter(where));
+      });
+    }
+
+    // if (ref.query.orderBy && ref.query.orderBy.length > 0) {
+    //   ref.query.orderBy.forEach(ordering => {
+    //     const func = ordering[1] === "asc" ? r.asc : r.desc;
+    //     query = query.orderBy(func(ordering[0]));
+    //   });
+    // } else {
+    //   query = query.orderBy({ index: 'id' });
+    // }
+
+    // if (ref.query.limit) {
+    //   query = query.limit(ref.query.limit);
+    // }
+
+    query.changes().run(this.connection, (err, cursor) => {
       this.subscriptions[subscriptionId] = cursor;
 
       cursor.each((err, row) => {

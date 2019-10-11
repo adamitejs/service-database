@@ -11,7 +11,7 @@
     socket.io-client "^2.2.0"
     uws "10.148.1"
 
-"@adamite/relay-server@latest":
+"@adamite/relay-server@^0.1.0-beta.0":
   version "0.1.0-beta.0"
   resolved "https://registry.yarnpkg.com/@adamite/relay-server/-/relay-server-0.1.0-beta.0.tgz#98360c9fcbf51d0cf64d818bd3c8388d46075611"
   integrity sha512-kokUhEXvuNmkhZJhP53BD35UvcvBaLV4J2PagF2lRUNAEtLDPQzfghtL5xrMoHgDgyNfvF2UBB0ofh8vQLjdRw==

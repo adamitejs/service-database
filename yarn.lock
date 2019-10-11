@@ -11,17 +11,17 @@
     socket.io-client "^2.2.0"
     uws "10.148.1"
 
-"@adamite/relay-server@^0.1.0-beta.0":
-  version "0.1.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@adamite/relay-server/-/relay-server-0.1.0-beta.0.tgz#98360c9fcbf51d0cf64d818bd3c8388d46075611"
-  integrity sha512-kokUhEXvuNmkhZJhP53BD35UvcvBaLV4J2PagF2lRUNAEtLDPQzfghtL5xrMoHgDgyNfvF2UBB0ofh8vQLjdRw==
+"@adamite/relay-server@^0.1.0-beta.1":
+  version "0.1.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@adamite/relay-server/-/relay-server-0.1.0-beta.1.tgz#ebd1cb80a23c64e65b919f729038adfc4337655f"
+  integrity sha512-loHQ+Ms5cEKYFgIy5FiIIA0XcBg7+uJN0UkV6xcHL7mUqwo/9biTGNHFrslIodB6y7OGLv+7u+0GN5ETnQ9r4Q==
   dependencies:
     express "^4.17.0"
     jsonwebtoken "^8.5.1"
     node-fetch "^2.3.0"
     socket.io "^2.2.0"
 
-"@adamite/sdk@latest":
+"@adamite/sdk@^0.1.0-beta.0":
   version "0.1.0-beta.0"
   resolved "https://registry.yarnpkg.com/@adamite/sdk/-/sdk-0.1.0-beta.0.tgz#a85f893ba576983946ed924eafbed562432a480a"
   integrity sha512-ZCX3mBCwY2MYvN//+h7EVR8ecMV34gQLBhcOciQhvKB/Svi8nv2rcDz6WDkf4iCl4m5by8mNrjjQdAHtRKdc1g==

@@ -7,8 +7,8 @@ const { DatabaseDeserializer, DatabaseServerValue } = require("@adamite/sdk");
 class DatabaseCommands {
   constructor(service) {
     this.service = service;
-    this.adapter = this.service.config.database.adapter(this.service.config);
-    this.rules = new RuleValidator(this.service.config.database.rules);
+    this.adapter = this.service.config.adapter;
+    this.rules = new RuleValidator(this.service.config.rules);
   }
 
   start() {

@@ -7,7 +7,7 @@ class DatabaseService {
   constructor(config) {
     this.config = config;
     this.server = server(
-      { name: "@adamite/service-database", apiUrl: "http://localhost:9000", port: 9001 },
+      { name: "database", apiUrl: this.config.apiUrl || "http://localhost:9000", port: this.config.port || 9001 },
       this.config
     );
     this.commands = new DatabaseCommands(this);

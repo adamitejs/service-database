@@ -9,7 +9,7 @@ class RethinkDbAdapater {
 
   connect() {
     r.connect(
-      this.config.database.connection || {
+      this.config || {
         host: "localhost",
         port: 28015
       },

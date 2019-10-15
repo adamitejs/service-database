@@ -1,7 +1,10 @@
 const r = require("rethinkdb");
+const { EventEmitter } = require("events");
+const createDeferred = require("./createDeferred");
 
-class RethinkDbAdapater {
+class RethinkDbAdapater extends EventEmitter {
   constructor(config) {
+    super();
     this.config = config;
     this.subscriptions = {};
     this.tablesBeingCreated = {};
@@ -114,7 +117,6 @@ class RethinkDbAdapater {
       .delete()
       .run(this.connection);
 
-    await this._deleteCollectionTableIfNecessary(ref.collection);
     return result;
   }
 
@@ -148,6 +150,7 @@ class RethinkDbAdapater {
       this.subscriptions[subscriptionId] = cursor;
 
       cursor.each((err, row) => {
+        if (err) return;
         callback(err, row.old_val, row.new_val);
       });
     });
@@ -159,31 +162,33 @@ class RethinkDbAdapater {
     delete this.subscriptions[subscriptionId];
   }
 
-  async getCollections(ref) {
-    const tableList = await r
+  getCollections(ref) {
+    return r
       .db(ref.name)
       .tableList()
       .run(this.connection);
+  }
 
-    return tableList;
+  async _createTable(ref) {
+    const tableList = await this.getCollections(ref.database);
+
+    if (!tableList.includes(ref.name)) {
+      return r
+        .db(ref.database.name)
+        .tableCreate(ref.name)
+        .run(this.connection);
+    }
   }
 
   async _createCollectionTableIfNecessary(ref) {
-    if (this.tablesBeingCreated[`${ref.database.name}.${ref.name}`]) return;
-    this.tablesBeingCreated[`${ref.database.name}.${ref.name}`] = true;
-    const db = r.db(ref.database.name);
-    const tables = await db.tableList().run(this.connection);
-    if (tables.indexOf(ref.name) > -1) return;
-    await db.tableCreate(ref.name).run(this.connection);
-    delete this.tablesBeingCreated[`${ref.database.name}.${ref.name}`];
-  }
+    if (!this.tablesBeingCreated[ref.name]) {
+      const def = createDeferred();
+      def.resolve(this._createTable(ref));
+      this.tablesBeingCreated[ref.name] = def;
+      return def.promise;
+    }
 
-  async _deleteCollectionTableIfNecessary(ref) {
-    const db = r.db(ref.database.name);
-    const table = db.table(ref.name);
-    const rowCount = await table.count().run(this.connection);
-    if (rowCount > 0) return;
-    await db.tableDrop(ref.name).run(this.connection);
+    return this.tablesBeingCreated[ref.name].promise;
   }
 
   _getFilter(where) {

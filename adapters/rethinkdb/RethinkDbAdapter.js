@@ -19,6 +19,7 @@ class RethinkDbAdapater extends EventEmitter {
       (err, connection) => {
         if (err) throw err;
         this.connection = connection;
+        this._createDefaultDbIfNecessary();
       }
     );
   }
@@ -27,7 +28,7 @@ class RethinkDbAdapater extends EventEmitter {
     await this._createCollectionTableIfNecessary(ref.collection);
 
     return r
-      .db(ref.collection.database.name)
+      .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
       .get(ref.id)
       .run(this.connection);
@@ -36,7 +37,7 @@ class RethinkDbAdapater extends EventEmitter {
   async readCollection(ref) {
     await this._createCollectionTableIfNecessary(ref);
 
-    let query = r.db(ref.database.name).table(ref.name);
+    let query = r.db(this._getDbNameOrDefault(ref.database.name)).table(ref.name);
 
     if (ref.query.where) {
       ref.query.where.forEach(where => {
@@ -62,7 +63,7 @@ class RethinkDbAdapater extends EventEmitter {
     await this._createCollectionTableIfNecessary(ref);
 
     return r
-      .db(ref.database.name)
+      .db(this._getDbNameOrDefault(ref.database.name))
       .table(ref.name)
       .insert(data, { returnChanges: true })
       .run(this.connection)
@@ -75,7 +76,7 @@ class RethinkDbAdapater extends EventEmitter {
 
     if (options.replace) {
       return r
-        .db(ref.collection.database.name)
+        .db(this._getDbNameOrDefault(ref.collection.database.name))
         .table(ref.collection.name)
         .replace(
           {
@@ -91,7 +92,7 @@ class RethinkDbAdapater extends EventEmitter {
     }
 
     return r
-      .db(ref.collection.database.name)
+      .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
       .insert(
         {
@@ -111,7 +112,7 @@ class RethinkDbAdapater extends EventEmitter {
     await this._createCollectionTableIfNecessary(ref.collection);
 
     const result = await r
-      .db(ref.collection.database.name)
+      .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
       .get(ref.id)
       .delete()
@@ -124,7 +125,7 @@ class RethinkDbAdapater extends EventEmitter {
     await this._createCollectionTableIfNecessary(ref.collection);
 
     const changes = r
-      .db(ref.collection.database.name)
+      .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
       .get(ref.id)
       .changes();
@@ -142,7 +143,7 @@ class RethinkDbAdapater extends EventEmitter {
     await this._createCollectionTableIfNecessary(ref);
 
     const changes = r
-      .db(ref.database.name)
+      .db(this._getDbNameOrDefault(ref.database.name))
       .table(ref.name)
       .changes();
 
@@ -164,9 +165,19 @@ class RethinkDbAdapater extends EventEmitter {
 
   getCollections(ref) {
     return r
-      .db(ref.name)
+      .db(this._getDbNameOrDefault(ref.name))
       .tableList()
       .run(this.connection);
+  }
+
+  _getDbNameOrDefault(name) {
+    return name === "default" ? this.config.defaultDb || "default" : name;
+  }
+
+  async _createDefaultDbIfNecessary() {
+    const dbList = await r.dbList().run(this.connection);
+    if (dbList.includes(this.config.defaultDb || "default")) return;
+    await r.dbCreate(this.config.defaultDb || "default").run(this.connection);
   }
 
   async _createTable(ref) {
@@ -174,7 +185,7 @@ class RethinkDbAdapater extends EventEmitter {
 
     if (!tableList.includes(ref.name)) {
       return r
-        .db(ref.database.name)
+        .db(this._getDbNameOrDefault(ref.database.name))
         .tableCreate(ref.name)
         .run(this.connection);
     }

@@ -27,11 +27,22 @@ class RethinkDbAdapater extends EventEmitter {
   async readDocument(ref) {
     await this._createCollectionTableIfNecessary(ref.collection);
 
-    return r
+    let query = r
       .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
-      .get(ref.id)
-      .run(this.connection);
+      .get(ref.id);
+
+    if (ref.joins.length > 0) {
+      ref.joins.forEach(join => {
+        query = query.merge(item => {
+          const database = r.db(this._getDbNameOrDefault(join.collectionRef.database.name));
+          const table = database.table(join.collectionRef.name);
+          return { [join.field]: table.get(item(join.field)) };
+        });
+      });
+    }
+
+    return query.run(this.connection);
   }
 
   async readCollection(ref) {
@@ -54,6 +65,16 @@ class RethinkDbAdapater extends EventEmitter {
 
     if (ref.query.limit) {
       query = query.limit(ref.query.limit);
+    }
+
+    if (ref.joins.length > 0) {
+      ref.joins.forEach(join => {
+        query = query.merge(item => {
+          const database = r.db(this._getDbNameOrDefault(join.collectionRef.database.name));
+          const table = database.table(join.collectionRef.name);
+          return { [join.field]: table.get(item(join.field)) };
+        });
+      });
     }
 
     return query.run(this.connection).then(r => r.toArray());
@@ -124,16 +145,37 @@ class RethinkDbAdapater extends EventEmitter {
   async subscribeDocument(subscriptionId, ref, callback) {
     await this._createCollectionTableIfNecessary(ref.collection);
 
-    const changes = r
+    let query = r
       .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
       .get(ref.id)
       .changes();
 
-    changes.run(this.connection, (err, cursor) => {
+    if (ref.joins.length > 0) {
+      ref.joins.forEach(join => {
+        query = query.merge(item => {
+          const database = r.db(this._getDbNameOrDefault(join.collectionRef.database.name));
+          const table = database.table(join.collectionRef.name);
+
+          return {};
+
+          return {
+            new_val: item("new_val") && {
+              [join.field]: table.get(item("new_val")(join.field))
+            },
+            old_val: item("old_val") && {
+              [join.field]: table.get(item("old_val")(join.field))
+            }
+          };
+        });
+      });
+    }
+
+    query.run(this.connection, (err, cursor) => {
       this.subscriptions[subscriptionId] = cursor;
 
       cursor.each((err, row) => {
+        console.log(err, row);
         callback(err, row.old_val, row.new_val);
       });
     });

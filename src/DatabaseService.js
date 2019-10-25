@@ -4,11 +4,13 @@ const VirtualDatabasePlugin = require("./VirtualDatabasePlugin");
 const DatabaseCommands = require("./DatabaseCommands");
 
 class DatabaseService {
-  constructor(config) {
+  constructor(config, rootConfig) {
     this.config = config;
+    this.rootConfig = rootConfig;
     this.server = server(
       { name: "database", apiUrl: this.config.apiUrl || "http://localhost:9000", port: this.config.port || 9001 },
-      this.config
+      this.config,
+      this.rootConfig
     );
     this.commands = new DatabaseCommands(this);
     this.registerCommands();

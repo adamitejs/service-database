@@ -212,6 +212,8 @@ class RethinkDbAdapater extends EventEmitter {
     if (operation === "<") return row.lt(value);
     if (operation === ">=") return row.ge(value);
     if (operation === "<=") return row.le(value);
+    if (operation === "array-contains") return row.contains(value);
+    if (operation === "array-not-contains") return row.contains(value).not();
   }
 }
 

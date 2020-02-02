@@ -1,22 +1,19 @@
 const adamite = require("@adamite/sdk").default;
-const server = require("@adamite/relay-server").default;
 const VirtualDatabasePlugin = require("./VirtualDatabasePlugin");
 const DatabaseCommands = require("./DatabaseCommands");
 
 class DatabaseService {
-  constructor(config, rootConfig) {
+  constructor(server, config, rootConfig) {
     this.config = config;
     this.rootConfig = rootConfig;
-    this.server = server(
-      { name: "database", apiUrl: this.config.apiUrl || "http://localhost:9000", port: this.config.port || 9001 },
-      this.config,
-      this.rootConfig
-    );
+    this.server = server;
     this.commands = new DatabaseCommands(this);
     this.registerCommands();
 
     adamite().use(VirtualDatabasePlugin);
     adamite().initializeApp({ _database: this });
+
+    this.commands.start();
   }
 
   registerCommands() {
@@ -30,11 +27,6 @@ class DatabaseService {
     this.server.command("database.unsubscribe", this.commands.unsubscribe.bind(this.commands));
 
     this.server.command("database.admin.getCollections", this.commands.adminGetCollections.bind(this.commands));
-  }
-
-  start() {
-    this.commands.start();
-    this.server.start();
   }
 }
 

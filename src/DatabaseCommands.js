@@ -7,152 +7,110 @@ const { DatabaseDeserializer, DatabaseServerValue } = require("@adamite/sdk");
 class DatabaseCommands {
   constructor(service) {
     this.service = service;
-    this.adapter = this.service.config.database.adapter(this.service.config);
-    this.rules = new RuleValidator(this.service.config.database.rules);
+    this.adapter = this.service.config.adapter;
+    this.rules = new RuleValidator(this.service.config.rules);
   }
 
   start() {
     this.adapter.connect();
   }
 
-  async createDocument(client, args, callback) {
+  async createDocument(client, args) {
     const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
 
-    try {
-      if (args.data) this._replaceServerValues(args.data);
-      await this.rules.validateRule("create", ref, { client, ref, data: args.data });
-      const data = await this.adapter.createDocument(ref, args.data);
-      const documentRef = ref.doc(data.id);
-      callback({ error: false, snapshot: { ref: documentRef, data } });
-    } catch (err) {
-      console.error(err);
-      callback({ error: err.message, snapshot: { ref } });
-    }
+    if (args.data) this._replaceServerValues(args.data);
+    await this.rules.validateRule("create", ref, { client, ref, data: args.data });
+    const data = await this.adapter.createDocument(ref, args.data);
+    const documentRef = ref.doc(data.id);
+
+    return { snapshot: { ref: documentRef, data } };
   }
 
-  async readDocument(client, args, callback) {
+  async readDocument(client, args) {
     const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
 
-    try {
-      const data = await this.adapter.readDocument(ref);
-      await this.rules.validateRule("read", ref, { client, ref }, { data });
-      callback({ error: false, snapshot: { ref, data } });
-    } catch (err) {
-      console.error(err);
-      callback({ error: err.message, snapshot: { ref } });
-    }
+    const data = await this.adapter.readDocument(ref);
+    await this.rules.validateRule("read", ref, { client, ref }, { data });
+
+    return { snapshot: { ref, data } };
   }
 
-  async updateDocument(client, args, callback) {
+  async updateDocument(client, args) {
     const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
 
-    try {
-      if (args.data) this._replaceServerValues(args.data);
-      await this.rules.validateRule("update", ref, { client, ref, data: args.data });
-      const data = await this.adapter.updateDocument(ref, args.data, args.options);
-      callback({ error: false, snapshot: { ref, data } });
-    } catch (err) {
-      console.error(err);
-      callback({ error: err.message, snapshot: { ref } });
-    }
+    if (args.data) this._replaceServerValues(args.data);
+    await this.rules.validateRule("update", ref, { client, ref, data: args.data });
+    const data = await this.adapter.updateDocument(ref, args.data, args.options);
+
+    return { snapshot: { ref, data } };
   }
 
-  async deleteDocument(client, args, callback) {
+  async deleteDocument(client, args) {
     const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
 
-    try {
-      await this.rules.validateRule("delete", ref, { client, ref });
-      await this.adapter.deleteDocument(ref, args.data);
-      callback({ error: false, snapshot: { ref } });
-    } catch (err) {
-      console.error(err);
-      callback({ error: err.message, snapshot: { ref } });
-    }
+    await this.rules.validateRule("delete", ref, { client, ref });
+    await this.adapter.deleteDocument(ref, args.data);
+
+    return { snapshot: { ref } };
   }
 
-  async readCollection(client, args, callback) {
+  async readCollection(client, args) {
     const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
 
-    try {
-      const data = await this.adapter.readCollection(ref);
+    const data = await this.adapter.readCollection(ref);
 
-      const docPromises = data.map(async doc => {
-        try {
-          const docRef = ref.doc(doc.id);
-          await this.rules.validateRule("read", docRef, { client, ref: docRef }, { data: doc });
-          return { ref: docRef, data: doc };
-        } catch (err) {
-          console.error(err);
-          return undefined;
-        }
-      });
+    const docPromises = data.map(async doc => {
+      try {
+        const docRef = ref.doc(doc.id);
+        await this.rules.validateRule("read", docRef, { client, ref: docRef }, { data: doc });
+        return { ref: docRef, data: doc };
+      } catch (err) {
+        console.error(err);
+        return undefined;
+      }
+    });
 
-      const resolvedDocs = await Promise.all(docPromises);
-      const definedDocs = resolvedDocs.filter(doc => !!doc);
+    const resolvedDocs = await Promise.all(docPromises);
+    const definedDocs = resolvedDocs.filter(doc => !!doc);
 
-      callback({ error: false, snapshot: { ref, data: definedDocs } });
-    } catch (err) {
-      console.error(err);
-      callback({ error: err.message, snapshot: { ref } });
-    }
+    return { snapshot: { ref, data: definedDocs } };
   }
 
-  async subscribeDocument(client, args, callback) {
+  async subscribeDocument(client, args) {
     const ref = DatabaseDeserializer.deserializeDocumentReference(args.ref);
     const subscriptionId = uuid.v4();
 
-    try {
-      await this.adapter.subscribeDocument(
-        subscriptionId,
-        ref,
-        this._handleDocumentSubscriptionUpdate(ref, client, subscriptionId)
-      );
+    await this.adapter.subscribeDocument(
+      subscriptionId,
+      ref,
+      this._handleDocumentSubscriptionUpdate(ref, client, subscriptionId)
+    );
 
-      callback({ error: false, subscription: { ref, id: subscriptionId } });
-    } catch (err) {
-      console.error(err);
-      callback({ error: err.message, subscription: { ref } });
-    }
+    return { subscription: { ref, id: subscriptionId } };
   }
 
-  async subscribeCollection(client, args, callback) {
+  async subscribeCollection(client, args) {
     const ref = DatabaseDeserializer.deserializeCollectionReference(args.ref);
     const subscriptionId = uuid.v4();
 
-    try {
-      await this.adapter.subscribeCollection(
-        subscriptionId,
-        ref,
-        this._handleCollectionSubscriptionUpdate(ref, client, subscriptionId)
-      );
+    await this.adapter.subscribeCollection(
+      subscriptionId,
+      ref,
+      this._handleCollectionSubscriptionUpdate(ref, client, subscriptionId)
+    );
 
-      callback({ error: false, subscription: { ref, id: subscriptionId } });
-    } catch (err) {
-      console.error(err);
-      callback({ error: err.message, subscription: { ref } });
-    }
+    return { subscription: { ref, id: subscriptionId } };
   }
 
-  unsubscribe(client, args, callback) {
-    try {
-      this.adapter.unsubscribe(args.subscriptionId);
-      callback({ error: false });
-    } catch (err) {
-      console.error(err);
-      callback({ error: err.message });
-    }
+  unsubscribe(client, args) {
+    this.adapter.unsubscribe(args.subscriptionId);
   }
 
-  async adminGetCollections(client, args, callback) {
-    try {
-      this._verifyAdminAccess(client);
-      const ref = DatabaseDeserializer.deserializeDatabaseReference(args.ref);
-      const collections = await this.adapter.getCollections(ref);
-      callback({ error: false, collections });
-    } catch (err) {
-      console.error(err);
-      callback({ error: err.message });
-    }
+  async adminGetCollections(client, args) {
+    this._verifyAdminAccess(client);
+    const ref = DatabaseDeserializer.deserializeDatabaseReference(args.ref);
+    const collections = await this.adapter.getCollections(ref);
+    return { collections };
   }
 
   _verifyAdminAccess(client) {

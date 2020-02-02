@@ -1,7 +1,10 @@
 const r = require("rethinkdb");
+const { EventEmitter } = require("events");
+const createDeferred = require("./createDeferred");
 
-class RethinkDbAdapater {
+class RethinkDbAdapater extends EventEmitter {
   constructor(config) {
+    super();
     this.config = config;
     this.subscriptions = {};
     this.tablesBeingCreated = {};
@@ -9,13 +12,14 @@ class RethinkDbAdapater {
 
   connect() {
     r.connect(
-      this.config.database.connection || {
+      this.config || {
         host: "localhost",
         port: 28015
       },
       (err, connection) => {
         if (err) throw err;
         this.connection = connection;
+        this._createDefaultDbIfNecessary();
       }
     );
   }
@@ -24,7 +28,7 @@ class RethinkDbAdapater {
     await this._createCollectionTableIfNecessary(ref.collection);
 
     return r
-      .db(ref.collection.database.name)
+      .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
       .get(ref.id)
       .run(this.connection);
@@ -33,7 +37,7 @@ class RethinkDbAdapater {
   async readCollection(ref) {
     await this._createCollectionTableIfNecessary(ref);
 
-    let query = r.db(ref.database.name).table(ref.name);
+    let query = r.db(this._getDbNameOrDefault(ref.database.name)).table(ref.name);
 
     if (ref.query.where) {
       ref.query.where.forEach(where => {
@@ -59,7 +63,7 @@ class RethinkDbAdapater {
     await this._createCollectionTableIfNecessary(ref);
 
     return r
-      .db(ref.database.name)
+      .db(this._getDbNameOrDefault(ref.database.name))
       .table(ref.name)
       .insert(data, { returnChanges: true })
       .run(this.connection)
@@ -72,7 +76,7 @@ class RethinkDbAdapater {
 
     if (options.replace) {
       return r
-        .db(ref.collection.database.name)
+        .db(this._getDbNameOrDefault(ref.collection.database.name))
         .table(ref.collection.name)
         .replace(
           {
@@ -88,7 +92,7 @@ class RethinkDbAdapater {
     }
 
     return r
-      .db(ref.collection.database.name)
+      .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
       .insert(
         {
@@ -108,13 +112,12 @@ class RethinkDbAdapater {
     await this._createCollectionTableIfNecessary(ref.collection);
 
     const result = await r
-      .db(ref.collection.database.name)
+      .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
       .get(ref.id)
       .delete()
       .run(this.connection);
 
-    await this._deleteCollectionTableIfNecessary(ref.collection);
     return result;
   }
 
@@ -122,7 +125,7 @@ class RethinkDbAdapater {
     await this._createCollectionTableIfNecessary(ref.collection);
 
     const changes = r
-      .db(ref.collection.database.name)
+      .db(this._getDbNameOrDefault(ref.collection.database.name))
       .table(ref.collection.name)
       .get(ref.id)
       .changes();
@@ -139,7 +142,9 @@ class RethinkDbAdapater {
   async subscribeCollection(subscriptionId, ref, callback) {
     await this._createCollectionTableIfNecessary(ref);
 
-    let query = r.db(ref.database.name).table(ref.name);
+    let query = r
+      .db(this._getDbNameOrDefault(ref.database.name))
+      .table(ref.name);
 
     if (ref.query.where) {
       ref.query.where.forEach(where => {
@@ -164,6 +169,7 @@ class RethinkDbAdapater {
       this.subscriptions[subscriptionId] = cursor;
 
       cursor.each((err, row) => {
+        if (err) return;
         callback(err, row.old_val, row.new_val);
       });
     });
@@ -175,31 +181,43 @@ class RethinkDbAdapater {
     delete this.subscriptions[subscriptionId];
   }
 
-  async getCollections(ref) {
-    const tableList = await r
-      .db(ref.name)
+  getCollections(ref) {
+    return r
+      .db(this._getDbNameOrDefault(ref.name))
       .tableList()
       .run(this.connection);
+  }
 
-    return tableList;
+  _getDbNameOrDefault(name) {
+    return name === "default" ? this.config.defaultDb || "default" : name;
+  }
+
+  async _createDefaultDbIfNecessary() {
+    const dbList = await r.dbList().run(this.connection);
+    if (dbList.includes(this.config.defaultDb || "default")) return;
+    await r.dbCreate(this.config.defaultDb || "default").run(this.connection);
+  }
+
+  async _createTable(ref) {
+    const tableList = await this.getCollections(ref.database);
+
+    if (!tableList.includes(ref.name)) {
+      return r
+        .db(this._getDbNameOrDefault(ref.database.name))
+        .tableCreate(ref.name)
+        .run(this.connection);
+    }
   }
 
   async _createCollectionTableIfNecessary(ref) {
-    if (this.tablesBeingCreated[`${ref.database.name}.${ref.name}`]) return;
-    this.tablesBeingCreated[`${ref.database.name}.${ref.name}`] = true;
-    const db = r.db(ref.database.name);
-    const tables = await db.tableList().run(this.connection);
-    if (tables.indexOf(ref.name) > -1) return;
-    await db.tableCreate(ref.name).run(this.connection);
-    delete this.tablesBeingCreated[`${ref.database.name}.${ref.name}`];
-  }
+    if (!this.tablesBeingCreated[ref.name]) {
+      const def = createDeferred();
+      def.resolve(this._createTable(ref));
+      this.tablesBeingCreated[ref.name] = def;
+      return def.promise;
+    }
 
-  async _deleteCollectionTableIfNecessary(ref) {
-    const db = r.db(ref.database.name);
-    const table = db.table(ref.name);
-    const rowCount = await table.count().run(this.connection);
-    if (rowCount > 0) return;
-    await db.tableDrop(ref.name).run(this.connection);
+    return this.tablesBeingCreated[ref.name].promise;
   }
 
   _getFilter(where) {
@@ -212,6 +230,10 @@ class RethinkDbAdapater {
     if (operation === "<") return row.lt(value);
     if (operation === ">=") return row.ge(value);
     if (operation === "<=") return row.le(value);
+    if (operation === "array-contains") return row.contains(value);
+    if (operation === "array-not-contains") return row.contains(value).not();
+    if (operation === "matches") return row.match(value);
+    if (operation === "not-matches") return row.match(value).not();
   }
 }
 

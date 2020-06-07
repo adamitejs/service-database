@@ -46,6 +46,7 @@ const adapter = {
     delete data.id;
 
     const oldData = { id, ...database[collection][id] };
+    database[collection][id] = database[collection][id] || {};
 
     Object.assign(database[collection][id], data);
 

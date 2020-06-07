@@ -1,6 +1,6 @@
 {
   "name": "@adamite/service-database",
-  "version": "0.1.0-beta.10",
+  "version": "0.1.0-beta.11",
   "description": "Adamite database service.",
   "main": "index.js",
   "license": "MIT",
